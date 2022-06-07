@@ -1,0 +1,71 @@
+# templates
+# ------------
+
+.deploy-template:
+  image: alpine:latest
+  script:
+    - echo "Deploying to ${CI_ENVIRONMENT_NAME}"
+  variables:
+    GIT_STRATEGY: none  # prevents fetching repo (we only need the artifact here)
+
+# -------------
+# Pipeline Definition
+
+variables:
+  PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
+
+stages:
+  - build
+  - test
+  - deploy-nonprod
+  - deploy-prod
+
+# Build and Test
+build-wheel:
+  image: python:3-slim
+  stage: build
+  artifacts:
+    name: 'app-wheel'
+    paths:
+      - dist/my_project-*.whl
+    expire_in: 6 mos
+  script:
+    - python setup.py dist
+
+test-unit:
+  stage: test
+  image: python:3-slim
+  cache:
+    key:
+      files:
+        - requirements.txt
+        - requirements-dev.txt
+    paths:
+      - $PIP_CACHE_DIR
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt -r requirements-dev.txt
+    - pip install dist/my_project-*.whl
+  script:
+    - pytest tests
+
+# Nonprod deployments
+
+dev:
+  extends: .deploy-template
+  stage: deploy-nonprod
+  environment:
+    name: dev
+  only:
+    - branches
+
+# Prod deployment
+
+prod:
+  extends: .deploy-template
+  stage: deploy-prod
+  environment:
+    name: prod
+  only:
+    - master
