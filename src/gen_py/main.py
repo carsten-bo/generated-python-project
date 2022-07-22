@@ -37,3 +37,23 @@ def flush_buffer():
     for b in buffer:
         print(b)
     buffer.clear()
+
+
+if __name__ == '__main__':
+    receive_message("""[
+        {
+            "timestamp": 1635875212060,
+            "payload": {
+                "temperature": 3.986548233191974, 
+                "sensorId": "Sensor-74ed4a6d-5957-4a2d-b02f-9122fd66c92a"
+            }
+        },
+        {
+            "timestamp": 1635875212024,
+            "payload": {
+                "temperature": -0.17564610049023222, 
+                "sensorId": "Sensor-45af12c9-2abe-472d-9ca3-9ea215fc9d10"
+            }
+        },
+    ]
+    """)
